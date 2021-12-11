@@ -1,5 +1,5 @@
 /** Telegram机器人的Token */
-const token = '机器人Token'
+const token = '机器人的Token'
 const robotName = '@寻龙'
 
 const TelegramBot = require('node-telegram-bot-api')
@@ -9,8 +9,9 @@ const fs = require('fs')
 const moment = require('moment')
 moment.locale('zh-cn')
 const vm = require('vm')
-const siteUrl = 'https://www.javbus.com/'
-const videoUrl = 'https://watchjavonline.com/'
+const siteUrl = 'https://www.javbus.com'
+// const videoUrl = 'https://watchjavonline.com'
+const embedyUrl = 'https://embedy.cc'
 const http = axios.create({
   baseURL: siteUrl,
   timeout: 15000,
@@ -23,8 +24,19 @@ const http = axios.create({
   }
 })
 
-const httpV = axios.create({
-  baseURL: videoUrl,
+// const httpV = axios.create({
+//   baseURL: videoUrl,
+//   timeout: 15000,
+//   headers: {
+//     'User-Agent':
+//       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+//     Accept:
+//       'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+//     'Accept-Language': 'zh-CN,zh;q=0.9'
+//   }
+// })
+const httpE = axios.create({
+  baseURL: embedyUrl,
   timeout: 15000,
   headers: {
     'User-Agent':
@@ -87,7 +99,6 @@ function drawState(range) {
 
 let idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
 
-// Matches "/echo [whatever]"
 bot.onText(/\/av (.+)/, async (msg, match) => {
   const today = moment().format('YYYY-MM-DD')
   if (state.date[today]) state.date[today]++
@@ -122,7 +133,16 @@ bot.onText(/\/av (.+)/, async (msg, match) => {
         return i + 1 < max
       })
       if (result.list.length) {
-        message += '\n-----------\n直接观看请点击: ' + result.list[0]
+        result.list.every((magnet, i) => {
+          message +=
+            '\n-----------\n直接观看请点击: ' +
+            magnet.title +
+            '\n时长: ' +
+            magnet.duration +
+            '\n地址: ' +
+            magnet.link
+          return i + 1 < max
+        })
       }
       if (!isPrivate && result.magnet.length > max) {
         message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
@@ -183,21 +203,47 @@ async function parseHtml(id) {
     }
   }
 
-  response = await httpV.get('/?s=' + id)
+  //   response = await httpV.get('/?s=' + id)
+  //   $ = cheerio.load(response.data, {
+  //     xmlMode: true,
+  //     decodeEntities: true,
+  //     normalizeWhitespace: true
+  //   })
+  //   let $div = $('div.entry-featured-media')
+  //   if ($div.length > 0) {
+  //     for (let i = 0; i < $div.length; i++) {
+  //       let $a2 = $div.eq(i).find('a.g1-frame')
+  //       if ($a2.length === 0) continue
+  //       const link = decodeURI($a2.attr('href').trim())
+  //       result.list.push(link)
+  //     }
+  //   }
+
+  response = await httpE.get('/video/' + id)
   $ = cheerio.load(response.data, {
     xmlMode: true,
     decodeEntities: true,
     normalizeWhitespace: true
   })
-  let $div = $('div.entry-featured-media')
+  let $div = $('div.thumb.c')
   if ($div.length > 0) {
+    let list = []
     for (let i = 0; i < $div.length; i++) {
-      let $a2 = $div.eq(i).find('a.g1-frame')
-      if ($a2.length === 0) continue
-      const link = decodeURI($a2.attr('href').trim())
-      result.list.push(link)
+      let $a3 = $div.eq(i).find('a')
+      let $t3 = $div.eq(i).find('span.title')
+      let $d3 = $div.eq(i).find('span.duration')
+      let $i3 = $div.eq(i).find('img')
+      if ($a3.length === 0) continue
+      list.push({
+        title: $t3.text().trim(),
+        duration: $d3.text().trim(),
+        cover: decodeURI($i3.attr('src').trim()),
+        link: embedyUrl + decodeURI($a3.attr('href').trim())
+      })
     }
+    result.list = list.splice(0, 5)
   }
-  console.log('最终结果', result)
+
+  //   console.log('最终结果', result)
   return result
 }
