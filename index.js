@@ -10,8 +10,10 @@ const moment = require('moment')
 moment.locale('zh-cn')
 const vm = require('vm')
 const siteUrl = 'https://www.javbus.com'
-// const videoUrl = 'https://watchjavonline.com'
 const embedyUrl = 'https://embedy.cc'
+const xvideoUrl = 'https://www.xvideos.com'
+// const videoUrl = 'https://watchjavonline.com'
+
 const http = axios.create({
   baseURL: siteUrl,
   timeout: 15000,
@@ -35,8 +37,21 @@ const http = axios.create({
 //     'Accept-Language': 'zh-CN,zh;q=0.9'
 //   }
 // })
+
 const httpE = axios.create({
   baseURL: embedyUrl,
+  timeout: 15000,
+  headers: {
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.9'
+  }
+})
+
+const httpX = axios.create({
+  baseURL: xvideoUrl,
   timeout: 15000,
   headers: {
     'User-Agent':
@@ -70,11 +85,6 @@ bot.onText(/\/state (\d+)/, (msg, match) => {
   return bot.sendMessage(msg.chat.id, buffer)
 })
 
-/**
- * 绘制图表
- * @param range
- * @returns {*}
- */
 function drawState(range) {
   let now = moment()
   let earlyDay = moment().subtract(range, 'day')
@@ -96,7 +106,6 @@ function drawState(range) {
   })
   return message
 }
-
 let idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
 
 bot.onText(/\/av (.+)/, async (msg, match) => {
@@ -120,27 +129,32 @@ bot.onText(/\/av (.+)/, async (msg, match) => {
     }
     let max = isPrivate ? 10 : 3
     let title = '[' + id + '] '
-    if (result.magnet.length > 0) {
+    if (result.magnet.length > 0 || result.list.length > 0) {
       let message = result.title
-      result.magnet.every((magnet, i) => {
-        message +=
-          '\n-----------\n日期: ' +
-          magnet.dateTime +
-          '\n大小: ' +
-          magnet.size +
-          '\n链接: ' +
-          magnet.link.substring(0, 60)
-        return i + 1 < max
-      })
-      if (result.list.length) {
-        result.list.every((magnet, i) => {
+      if (result.magnet.length) {
+        result.magnet.every((magnet, i) => {
           message +=
-            '\n-----------\n直接观看请点击: ' +
-            magnet.title +
+            '\n-----------\n日期: ' +
+            magnet.dateTime +
+            '\n大小: ' +
+            magnet.size +
+            '\n链接: ' +
+            '\n' +
+            magnet.link.substring(0, 60)
+          return i + 1 < max
+        })
+      }
+      if (result.list.length) {
+        result.list.every((list, i) => {
+          message +=
+            '\n-----------\n<h1>直接观看请点击:</h1> ' +
+            '\n标题: ' +
+            list.title +
             '\n时长: ' +
-            magnet.duration +
+            list.duration +
             '\n地址: ' +
-            magnet.link
+            '\n' +
+            list.link
           return i + 1 < max
         })
       }
@@ -160,18 +174,13 @@ bot.onText(/\/av (.+)/, async (msg, match) => {
   }
 })
 
-/**
- * 解析Javbus网页内容
- * @param id
- * @returns {{title: string, cover: string, magnet: array}}
- */
 async function parseHtml(id) {
   const result = { title: '', cover: '', magnet: [], list: [] }
   let response = await http.get('/' + id)
   let $ = cheerio.load(response.data)
   let $image = $('a.bigImage img')
-  result.title = $image.attr('title')
   result.cover = siteUrl + $image.attr('src')
+  result.title = $image.attr('title')
 
   let ajax = { gid: '', uc: '', img: '' }
   const context = new vm.createContext(ajax)
@@ -245,5 +254,80 @@ async function parseHtml(id) {
   }
 
   //   console.log('最终结果', result)
+  return result
+}
+
+bot.onText(/\/xv (.+)/, async (msg, match) => {
+  const today = moment().format('YYYY-MM-DD')
+  if (state.date[today]) state.date[today]++
+  else state.date[today] = 1
+  const chatId = msg.chat.id
+  let chartType = msg.chat.type
+  let isPrivate = chartType === 'private'
+  let id = match[1].trim()
+  console.log('请求黄片', id)
+  if (isPrivate) bot.sendMessage(chatId, `开始查找黄片：${id} ……`)
+  try {
+    let result = await parseXtml(id)
+    let max = isPrivate ? 10 : 3
+    let title = '[' + id + '] '
+    if (result.list.length > 0) {
+      let message = result.title
+      result.list.every((list, i) => {
+        message +=
+          '\n-----------\n直接观看请点击: ' +
+          '\n标题: ' +
+          list.title +
+          '\n分辨率: ' +
+          list.duration +
+          '\n地址: ' +
+          '\n' +
+          list.link
+        return i + 1 < max
+      })
+      if (!isPrivate && result.list.length > max) {
+        message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
+          max} 个Magnet链接没有显示\n与 ${robotName} 机器人单聊可以显示所有链接`
+      }
+      bot.sendMessage(chatId, message)
+    } else {
+      bot.sendMessage(chatId, title + '还没有视频链接')
+    }
+  } catch (e) {
+    console.error(id, e.message)
+    if (e.message.indexOf('timeout') !== -1)
+      return bot.sendMessage(chatId, '机器人查询黄片超时，请重试')
+    bot.sendMessage(chatId, `找不到 ${id}！`)
+  }
+})
+
+async function parseXtml(id) {
+  const result = { title: '', cover: '', magnet: [], list: [] }
+  let response = await httpX.get('/?k=' + encodeURI(id))
+  let $ = cheerio.load(response.data, {
+    xmlMode: true,
+    decodeEntities: true,
+    normalizeWhitespace: true
+  })
+  let $div1 = $('div.thumb-inside')
+  let $div = $('div.thumb-under')
+  if ($div.length > 0) {
+    let list = []
+    for (let i = 0; i < $div.length; i++) {
+      let $d3 = $div1.eq(i).find('span.video-hd-mark')
+      let $i3 = $div1.eq(i).find('img')
+      let $a3 = $div.eq(i).find('a')
+      if ($a3.length === 0) continue
+      list.push({
+        title: decodeURI($a3.attr('title').trim()),
+        duration: decodeURI($d3.html()),
+        cover: decodeURI($i3.attr('data-src').trim()),
+        link: xvideoUrl + decodeURI($a3.attr('href').trim())
+      })
+    }
+    result.list = list.splice(0, 5)
+  }
+
+  console.log('最终结果', result)
   return result
 }
