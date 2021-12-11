@@ -12,6 +12,7 @@ const vm = require('vm')
 const siteUrl = 'https://www.javbus.com'
 const embedyUrl = 'https://embedy.cc'
 const xvideoUrl = 'https://www.xvideos.com'
+const bestUrl = 'https://xhamster.com/best/monthly'
 // const videoUrl = 'https://watchjavonline.com'
 
 const http = axios.create({
@@ -52,6 +53,18 @@ const httpE = axios.create({
 
 const httpX = axios.create({
   baseURL: xvideoUrl,
+  timeout: 15000,
+  headers: {
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.9'
+  }
+})
+
+const httpB = axios.create({
+  baseURL: bestUrl,
   timeout: 15000,
   headers: {
     'User-Agent':
@@ -323,6 +336,74 @@ async function parseXtml(id) {
         duration: decodeURI($d3.html()),
         cover: decodeURI($i3.attr('data-src').trim()),
         link: xvideoUrl + decodeURI($a3.attr('href').trim())
+      })
+    }
+    result.list = list.splice(0, 5)
+  }
+
+  console.log('最终结果', result)
+  return result
+}
+
+bot.onText(/\/hot/, async msg => {
+  const today = moment().format('YYYY-MM-DD')
+  if (state.date[today]) state.date[today]++
+  else state.date[today] = 1
+  const chatId = msg.chat.id
+  let chartType = msg.chat.type
+  let isPrivate = chartType === 'private'
+  if (isPrivate) bot.sendMessage(chatId, `开始推荐 ……`)
+  try {
+    let result = await parseBtml()
+    let max = isPrivate ? 10 : 3
+    if (result.list.length > 0) {
+      let message = result.title
+      result.list.every((list, i) => {
+        message +=
+          '\n-----------\n直接观看请点击: ' +
+          '\n标题: ' +
+          list.title +
+          '\n地址: ' +
+          '\n' +
+          list.link
+        return i + 1 < max
+      })
+      if (!isPrivate && result.list.length > max) {
+        message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
+          max} 个Magnet链接没有显示\n与 ${robotName} 机器人单聊可以显示所有链接`
+      }
+      bot.sendMessage(chatId, message)
+    } else {
+      bot.sendMessage(chatId, title + '还没有视频链接')
+    }
+  } catch (e) {
+    console.error(e.message)
+    if (e.message.indexOf('timeout') !== -1)
+      return bot.sendMessage(chatId, '机器人查询黄片超时，请重试')
+    bot.sendMessage(chatId, `找不到 ！`)
+  }
+})
+
+async function parseBtml() {
+  const result = { title: '', cover: '', magnet: [], list: [] }
+  let response = await httpB.get()
+  let $ = cheerio.load(response.data, {
+    xmlMode: true,
+    decodeEntities: true,
+    normalizeWhitespace: true
+  })
+  let $div = $('div.thumb-list__item')
+  if ($div.length > 0) {
+    let list = []
+    for (let i = 0; i < $div.length; i++) {
+      let $a3 = $div.eq(i).find('a.video-thumb__image-container')
+      let $d3 = $div.eq(i).find('a.video-thumb-info__name')
+      let $i3 = $div.eq(i).find('img.thumb-image-container__image')
+      if ($a3.length === 0) continue
+      list.push({
+        title: decodeURI($d3.html().trim()),
+        cover: decodeURI($i3.attr('src').trim()),
+        link: decodeURI($a3.attr('href').trim())
       })
     }
     result.list = list.splice(0, 5)
