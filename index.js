@@ -12,7 +12,7 @@ const vm = require('vm')
 const siteUrl = 'https://www.javbus.com'
 const embedyUrl = 'https://embedy.cc'
 const xvideoUrl = 'https://www.xvideos.com'
-const bestUrl = 'https://xhamster.com/best/monthly'
+const bestUrl = 'https://xhamster.com'
 // const videoUrl = 'https://watchjavonline.com'
 
 const http = axios.create({
@@ -77,12 +77,22 @@ const httpB = axios.create({
 
 const bot = new TelegramBot(token, { polling: true })
 
-//开始入口
+const helpMsg = `
+  欢迎使用番号机器人\n
+  请输入命令格式: \n
+    /av ssni-888 查询 \n
+    /xv 麻豆 查询 \n
+    /xm hot 查询 \n
+`
+
 bot.onText(/\/start/, msg => {
-  bot.sendMessage(msg.chat.id, '欢迎使用番号机器人\n请输入 /av + 番号 查询 ')
+  bot.sendMessage(msg.chat.id, helpMsg)
 })
 
-//简单保存工作状态
+bot.onText(/\/av/, msg => {
+  bot.sendMessage(msg.chat.id, helpMsg)
+})
+
 const state = { start: Date.now(), date: {} }
 
 bot.onText(/\/state/, msg => {
@@ -90,6 +100,7 @@ bot.onText(/\/state/, msg => {
   let buffer = drawState(5)
   return bot.sendMessage(msg.chat.id, buffer)
 })
+
 bot.onText(/\/state (\d+)/, (msg, match) => {
   //工作状态
   let days = parseInt(match[1].trim()) // the captured "whatever"
@@ -119,6 +130,7 @@ function drawState(range) {
   })
   return message
 }
+
 let idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
 
 bot.onText(/\/av (.+)/, async (msg, match) => {
@@ -128,7 +140,7 @@ bot.onText(/\/av (.+)/, async (msg, match) => {
   const chatId = msg.chat.id
   let chartType = msg.chat.type
   let isPrivate = chartType === 'private'
-  let id = match[1].trim() // the captured "whatever"
+  let id = match[1].trim()
   console.log('请求番号', id)
   if (idRegex.test(id)) {
     id = id.match(idRegex)
@@ -137,45 +149,47 @@ bot.onText(/\/av (.+)/, async (msg, match) => {
   if (isPrivate) bot.sendMessage(chatId, `开始查找车牌号：${id} ……`)
   try {
     let result = await parseHtml(id)
+    if (result.title) {
+      await bot.sendMessage(chatId, `<b><i>${result.title}</i></b>`, {
+        parse_mode: 'HTML'
+      })
+    }
     if (result.cover) {
       await bot.sendPhoto(chatId, result.cover + '?random=64')
     }
     let max = isPrivate ? 10 : 3
     let title = '[' + id + '] '
     if (result.magnet.length > 0 || result.list.length > 0) {
-      let message = result.title
+      let message = ''
       if (result.magnet.length) {
         result.magnet.every((magnet, i) => {
-          message +=
-            '\n-----------\n日期: ' +
-            magnet.dateTime +
-            '\n大小: ' +
-            magnet.size +
-            '\n链接: ' +
-            '\n' +
-            magnet.link.substring(0, 60)
+          message += '\n----------------------\n日期: ' + magnet.dateTime
+          message += '\n大小: ' + magnet.size
+          if (magnet.is_hd) message += '\n分辨率: ' + magnet.is_hd
+          if (magnet.has_subtitle) message += '\n字幕: 有' + magnet.has_subtitle
+          message += '\n磁力链接: ' + '\n' + '<code>' + magnet.link + '</code>'
           return i + 1 < max
         })
       }
       if (result.list.length) {
         result.list.every((list, i) => {
           message +=
-            '\n-----------\n<h1>直接观看请点击:</h1> ' +
-            '\n标题: ' +
+            '\n----------------------\n点击观看: <a href="' +
+            list.link +
+            '">' +
             list.title +
-            '\n时长: ' +
-            list.duration +
-            '\n地址: ' +
-            '\n' +
-            list.link
+            '</a>'
+          message += '\n时长: ' + list.duration
+          if (list.view) message += '\n观看人数: ' + list.view
           return i + 1 < max
         })
       }
       if (!isPrivate && result.magnet.length > max) {
-        message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
+        message += `\n----------------------\n在群聊中发车，还有 ${result.magnet
+          .length -
           max} 个Magnet链接没有显示\n与 ${robotName} 机器人单聊可以显示所有链接`
       }
-      bot.sendMessage(chatId, message)
+      bot.sendMessage(chatId, message, { parse_mode: 'HTML' })
     } else {
       bot.sendMessage(chatId, title + '还没有Magnet链接')
     }
@@ -194,7 +208,6 @@ async function parseHtml(id) {
   let $image = $('a.bigImage img')
   result.cover = siteUrl + $image.attr('src')
   result.title = $image.attr('title')
-
   let ajax = { gid: '', uc: '', img: '' }
   const context = new vm.createContext(ajax)
   let $script = $('body > script:nth-child(9)')
@@ -216,11 +229,15 @@ async function parseHtml(id) {
     for (let i = 0; i < $tr.length; i++) {
       let $a = $tr.eq(i).find('td:nth-child(2) a')
       let $a1 = $tr.eq(i).find('td:nth-child(3) a')
+      let $subtitle = $tr.eq(i).find('a.btn-warning')
+      let $hd = $tr.eq(i).find('a.btn-primary')
       if ($a.length === 0) continue
       result.magnet.push({
         link: decodeURI($a.attr('href').trim()),
         size: $a.text().trim(),
-        dateTime: $a1.text().trim()
+        dateTime: $a1.text().trim(),
+        is_hd: $hd.text().trim(),
+        has_subtitle: $subtitle.text().trim()
       })
     }
   }
@@ -255,10 +272,13 @@ async function parseHtml(id) {
       let $t3 = $div.eq(i).find('span.title')
       let $d3 = $div.eq(i).find('span.duration')
       let $i3 = $div.eq(i).find('img')
+      let $v3 = $div.eq(i).find('span.view')
+      $v3.find(':nth-child(n)').remove()
       if ($a3.length === 0) continue
       list.push({
         title: $t3.text().trim(),
         duration: $d3.text().trim(),
+        view: $v3.text().trim(),
         cover: decodeURI($i3.attr('src').trim()),
         link: embedyUrl + decodeURI($a3.attr('href').trim())
       })
@@ -266,7 +286,6 @@ async function parseHtml(id) {
     result.list = list.splice(0, 5)
   }
 
-  //   console.log('最终结果', result)
   return result
 }
 
@@ -288,7 +307,7 @@ bot.onText(/\/xv (.+)/, async (msg, match) => {
       let message = result.title
       result.list.every((list, i) => {
         message +=
-          '\n-----------\n直接观看请点击: ' +
+          '\n----------------------\n直接观看请点击: ' +
           '\n标题: ' +
           list.title +
           '\n分辨率: ' +
@@ -299,7 +318,8 @@ bot.onText(/\/xv (.+)/, async (msg, match) => {
         return i + 1 < max
       })
       if (!isPrivate && result.list.length > max) {
-        message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
+        message += `\n----------------------\n在群聊中发车，还有 ${result.magnet
+          .length -
           max} 个Magnet链接没有显示\n与 ${robotName} 机器人单聊可以显示所有链接`
       }
       bot.sendMessage(chatId, message)
@@ -345,34 +365,36 @@ async function parseXtml(id) {
   return result
 }
 
-bot.onText(/\/hot/, async msg => {
+bot.onText(/\/xm (.+)/, async (msg, match) => {
   const today = moment().format('YYYY-MM-DD')
   if (state.date[today]) state.date[today]++
   else state.date[today] = 1
   const chatId = msg.chat.id
   let chartType = msg.chat.type
+  let id = match[1].trim()
   let isPrivate = chartType === 'private'
   if (isPrivate) bot.sendMessage(chatId, `开始推荐 ……`)
   try {
-    let result = await parseBtml()
+    let result = await parseBtml(id)
     let max = isPrivate ? 10 : 3
     if (result.list.length > 0) {
       let message = result.title
       result.list.every((list, i) => {
         message +=
-          '\n-----------\n直接观看请点击: ' +
-          '\n标题: ' +
+          '\n----------------------\n点击观看: <a href="' +
+          list.link +
+          '">' +
           list.title +
-          '\n地址: ' +
-          '\n' +
-          list.link
+          '</a>'
+        message += '\n时长：' + list.duration
         return i + 1 < max
       })
       if (!isPrivate && result.list.length > max) {
-        message += `\n-----------\n在群聊中发车，还有 ${result.magnet.length -
+        message += `\n----------------------\n在群聊中发车，还有 ${result.magnet
+          .length -
           max} 个Magnet链接没有显示\n与 ${robotName} 机器人单聊可以显示所有链接`
       }
-      bot.sendMessage(chatId, message)
+      bot.sendMessage(chatId, message, { parse_mode: 'HTML' })
     } else {
       bot.sendMessage(chatId, title + '还没有视频链接')
     }
@@ -384,9 +406,9 @@ bot.onText(/\/hot/, async msg => {
   }
 })
 
-async function parseBtml() {
+async function parseBtml(type) {
   const result = { title: '', cover: '', magnet: [], list: [] }
-  let response = await httpB.get()
+  let response = await httpB.get('/' + type)
   let $ = cheerio.load(response.data, {
     xmlMode: true,
     decodeEntities: true,
@@ -399,16 +421,18 @@ async function parseBtml() {
       let $a3 = $div.eq(i).find('a.video-thumb__image-container')
       let $d3 = $div.eq(i).find('a.video-thumb-info__name')
       let $i3 = $div.eq(i).find('img.thumb-image-container__image')
+      let $t3 = $div.eq(i).find('div.thumb-image-container__duration span')
       if ($a3.length === 0) continue
       list.push({
         title: decodeURI($d3.html().trim()),
         cover: decodeURI($i3.attr('src').trim()),
-        link: decodeURI($a3.attr('href').trim())
+        link: decodeURI($a3.attr('href').trim()),
+        duration: decodeURI($t3.html().trim())
       })
     }
     result.list = list.splice(0, 5)
   }
 
-  console.log('最终结果', result)
+  // console.log('最终结果', result)
   return result
 }
