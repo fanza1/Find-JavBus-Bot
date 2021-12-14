@@ -18,19 +18,18 @@ export default async request => {
     }
 
     const headers = new Headers({'content-type': 'application/json;charset=UTF-8'})
-    // const RETURN_FORBIDDEN = new Response('Oops...', {status: 403, statusText: 'Forbidden'})
     const RETURN_OK = new Response('working', {status: 200, headers: headers})
 
     const bot = new Telegram(BOT_TOKEN, MESSAGE)
 
     const help_text = `
-    欢迎使用寻龙机器人 \n
-    请输入命令格式: \n
-      /av ssni-888 查询 \n
-      /xv 麻豆 查询 \n
-      /xm hot 查询 \n
-    由 Cloudflare Worker 强力驱动
-  `
+      欢迎使用寻龙机器人 \n
+      请输入命令格式: \n
+        /av ssni-888 查询 \n
+        /xv 麻豆 查询 \n
+        /xm hot 查询 \n
+      由 Cloudflare Worker 强力驱动
+    `
 
     const state = { start: Date.now(), date: {} }
 
@@ -40,7 +39,6 @@ export default async request => {
       bot.sendText(MESSAGE.chat_id,help_text)
       return RETURN_OK
     }
-
     if (MESSAGE.text.startsWith('/start')) {
       bot.sendText(MESSAGE.chat_id,help_text)
       return RETURN_OK
@@ -77,7 +75,7 @@ export default async request => {
       try {
         if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始查找车牌：${code} ……`)
 
-        let {title, cover, magnet, list} = await reqJavbus(code)
+        let { title, cover, magnet, list } = await reqJavbus(code)
 
         if (title) {
           await bot.sendText(MESSAGE.chat_id, `<b><i>${title}</i></b>`)
