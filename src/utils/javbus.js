@@ -31,7 +31,7 @@ export async function reqJavbus(id) {
     let gid = responseText.match(new RegExp(/gid.=.(\d*)/))[1]
     let img = responseText.match(new RegExp(/img.=.\'(.*)\'/))[1]
     let floor = Math.floor(Math.random() * 1e3 + 1)
-    url = javUrl + `/ajax/uncledatoolsbyajax.php?gid=${gid}&img=${img}&lang=zh&floor=${floor}`
+    url = javUrl + `/ajax/uncledatoolsbyajax.php?gid=${gid}&img=${img}&lang=zh&floor=${floor}&uc=0`
     ajax_req.headers["Referer"] = javUrl + id
     response = await fetch(url, ajax_req)
     responseText = await response.text()

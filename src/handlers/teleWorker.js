@@ -36,11 +36,11 @@ export default async request => {
     const codeRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/;
 
     if (body.message.sticker) {
-      bot.sendText(MESSAGE.chat_id,help_text)
+      bot.sendText(MESSAGE.chat_id, help_text)
       return RETURN_OK
     }
     if (MESSAGE.text.startsWith('/start')) {
-      bot.sendText(MESSAGE.chat_id,help_text)
+      bot.sendText(MESSAGE.chat_id, help_text)
       return RETURN_OK
     }
     else if (MESSAGE.text === '/state') {
@@ -55,7 +55,7 @@ export default async request => {
       return RETURN_OK
     }
     else if (MESSAGE.text === '/av') {
-      bot.sendText(MESSAGE.chat_id,help_text)
+      bot.sendText(MESSAGE.chat_id, help_text)
       return RETURN_OK
     }
     else if (MESSAGE.text.startsWith('/av')) {
@@ -77,13 +77,12 @@ export default async request => {
 
         let { title, cover, magnet, list } = await reqJavbus(code)
 
-        if (cover && title) {
-          const media = {
-            url: cover,
-            caption: title
-          }
-          await bot.sendPhoto(MESSAGE.chat_id, media)
+        const media = {
+          url: cover || '',
+          caption: title || ''
         }
+        await bot.sendPhoto(MESSAGE.chat_id, media)
+
         if(magnet.length || list.length) {
           let message = ''
           if (magnet.length) {
