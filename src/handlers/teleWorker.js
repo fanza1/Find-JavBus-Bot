@@ -1,9 +1,8 @@
-import Telegram from '../utils/telegram'
-import { BOT_TOKEN,ERRLOG_CHANNEL,ROBOT_NAME } from '../config'
-import { reqJavbus } from '../utils/javbus'
+import Telegram from '../utils/telegram.js'
+import { BOT_TOKEN,ROBOT_NAME } from '../config/index.js'
+import { reqJavbus } from '../utils/javbus.js'
 import moment from 'moment'
 moment.locale('zh-cn')
-
 
 export default async request => {
   try {
@@ -19,18 +18,23 @@ export default async request => {
     }
 
     const headers = new Headers({'content-type': 'application/json;charset=UTF-8'})
-    const RETURN_FORBIDDEN = new Response('Oops...', {status: 403, statusText: 'Forbidden'})
+    // const RETURN_FORBIDDEN = new Response('Oops...', {status: 403, statusText: 'Forbidden'})
     const RETURN_OK = new Response('working', {status: 200, headers: headers})
 
     const bot = new Telegram(BOT_TOKEN, MESSAGE)
 
-    const help_text = "命令格式: 由 Cloudflare Worker 强力驱动"
+    const help_text = `
+    欢迎使用寻龙机器人 \n
+    请输入命令格式: \n
+      /av ssni-888 查询 \n
+      /xv 麻豆 查询 \n
+      /xm hot 查询 \n
+    由 Cloudflare Worker 强力驱动
+  `
 
     const state = { start: Date.now(), date: {} }
 
     const codeRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/;
-
-
 
     if (body.message.sticker) {
       bot.sendText(MESSAGE.chat_id,help_text)
@@ -41,7 +45,7 @@ export default async request => {
       bot.sendText(MESSAGE.chat_id,help_text)
       return RETURN_OK
     }
-    else if (MESSAGE.text == '/state') {
+    else if (MESSAGE.text === '/state') {
       let buffer = drawState(5)
       bot.sendText(MESSAGE.chat_id, buffer)
       return RETURN_OK
@@ -52,7 +56,7 @@ export default async request => {
       bot.sendText(MESSAGE.chat_id, buffer)
       return RETURN_OK
     }
-    else if (MESSAGE.text == '/av') {
+    else if (MESSAGE.text === '/av') {
       bot.sendText(MESSAGE.chat_id,help_text)
       return RETURN_OK
     }
@@ -72,6 +76,7 @@ export default async request => {
 
       try {
         if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始查找车牌：${code} ……`)
+
         let {title, cover, magnet, list} = await reqJavbus(code)
 
         if (title) {
