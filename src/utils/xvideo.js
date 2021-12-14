@@ -3,9 +3,11 @@ const xvideoUrl = 'https://www.xvideos.com'
 
 let ajax_req = {
   headers: {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:84.0) Gecko/20100101 Firefox/84.0",
-      "Accept": "*/*",
-      "Accept-Language": "en-US,en;q=0.5"
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+    'Accept':
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.9'
   },
   method: "GET"
 }
