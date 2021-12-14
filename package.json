@@ -4,7 +4,6 @@
   "description": "Telegram 番号机器人",
   "main": "index.js",
   "dependencies": {
-    "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
     "echarts": "^4.0.4",
     "koa": "^2.5.0",
