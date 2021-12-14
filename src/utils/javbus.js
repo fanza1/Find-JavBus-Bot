@@ -6,31 +6,32 @@ const javUrl = 'https://www.javbus.com'
 const embedyUrl = 'https://embedy.cc'
 const xvideoUrl = 'https://www.xvideos.com'
 const xhamsterUrl = 'https://xhamster.com'
+
 const httpGet = config => {
     return new Promise((resolve, reject) => {
-      const instance = axios.create({
-        method: 'get',
-        timeout: 5000,
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'zh-CN,zh;q=0.9'
-        }
-      })
-
-      instance(config).then(res => {
-        resolve(res);
-      }).catch(err => {
-        reject(err);
-      })
+        const instance = axios.create({
+            method: 'get',
+            timeout: 5000,
+            headers: {
+                'User-Agent':
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
+                Accept:
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'zh-CN,zh;q=0.9'
+            }
+        })
+        instance(config).then(res => {
+            resolve(res);
+        }).catch(err => {
+            reject(err);
+        })
     })
-  }
+}
 
-export async function reqJavbus(code) {
+export async function reqJavbus(id) {
     const result = { title: '', cover: '', magnet: [], list: [] }
-    let response = await httpGet({baseURL:javUrl,url:'/' + id})
+
+    let response = await httpGet({ baseURL: javUrl, url:'/' + id })
     let $ = cheerio.load(response.data)
     let $image = $('a.bigImage img')
     result.cover = javUrl + $image.attr('src')
@@ -40,13 +41,15 @@ export async function reqJavbus(code) {
     let $script = $('body > script:nth-child(9)')
     new vm.Script($script.html()).runInContext(context)
     let floor = Math.floor(Math.random() * 1e3 + 1)
+
     let url = `/ajax/uncledatoolsbyajax.php?gid=${ajax.gid}&uc=${ajax.uc}&img=${ajax.img}&lang=zh&floor=${floor}`
-    response = await httpGet({baseURL:javUrl,url,headers: { referer: javUrl + id }})
+    response = await httpGet({ baseURL: javUrl, url, headers: { referer: javUrl + id }})
     $ = cheerio.load(response.data, {
       xmlMode: true,
       decodeEntities: true,
       normalizeWhitespace: true
     })
+
     let $tr = $('tr')
     if ($tr.length > 0) {
       for (let i = 0; i < $tr.length; i++) {
@@ -65,7 +68,7 @@ export async function reqJavbus(code) {
       }
     }
 
-    response = await httpGet({baseURL:embedyUrl,url:'/video/' + id})
+    response = await httpGet({ baseURL: embedyUrl, url: '/video/' + id})
     $ = cheerio.load(response.data, {
       xmlMode: true,
       decodeEntities: true,
