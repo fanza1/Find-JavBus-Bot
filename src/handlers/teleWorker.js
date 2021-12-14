@@ -1,5 +1,5 @@
-/** Telegram机器人Token */
-const token = '5073237170:AAFTDd2dwsXT09KkHfKT3tcrP8FO6d_P-eQ'
+/** Telegram 机器人Token */
+const token = '机器人Token'
 const robotName = '@寻龙'
 
 const TelegramBot = require('node-telegram-bot-api')
