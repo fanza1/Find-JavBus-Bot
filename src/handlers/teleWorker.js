@@ -1,6 +1,8 @@
 import Telegram from '../utils/telegram.js'
 import { BOT_TOKEN, ROBOT_NAME } from '../config/index.js'
 import { reqJavbus } from '../utils/javbus.js'
+import { reqXVideo } from '../utils/xvideo.js'
+import { reqXHamster } from '../utils/xhamster.js'
 import moment from 'moment'
 moment.locale('zh-cn')
 
@@ -137,7 +139,7 @@ export default async request => {
         let { list } = await reqXVideo(code)
 
         if (list.length) {
-          let message = '[' + code + ']\n'
+          let message = '关键字查询：[' + code + ']\n'
           list.every((list, i) => {
             message +=
               '\n----------------------\n点击观看: <a href="' +
@@ -147,6 +149,43 @@ export default async request => {
               '</a>'
             message += '\n时长: ' + list.duration
             if (list.view) message += '\n观看人数: ' + list.view
+            return i + 1 < max
+          })
+          bot.sendText(MESSAGE.chat_id, message)
+        }
+        else {
+          bot.sendText(MESSAGE.chat_id, "还没有相关链接")
+        }
+      } catch (e) {
+        bot.sendText(MESSAGE.chat_id, e.message)
+      }
+      return RETURN_OK
+    }
+    else if (MESSAGE.text.startsWith('/xm')) {
+      const today = moment().format('YYYY-MM-DD')
+      if (state.date[today]) state.date[today]++
+      else state.date[today] = 1
+
+      let code = MESSAGE.text.replace('/xv','').trim()
+
+      let isPrivate = MESSAGE.chat_type === 'private';
+      let max = isPrivate ? 10 : 3;
+
+      try {
+        if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始推荐资源：${code} ……`)
+
+        let { list } = await reqXHamster(code)
+
+        if (list.length) {
+          let message = '推荐资源：[' + code + ']\n'
+          list.every((list, i) => {
+            message +=
+            '\n----------------------\n点击观看: <a href="' +
+            list.link +
+            '">' +
+            list.title +
+            '</a>'
+            message += '\n时长：' + list.duration
             return i + 1 < max
           })
           bot.sendText(MESSAGE.chat_id, message)
