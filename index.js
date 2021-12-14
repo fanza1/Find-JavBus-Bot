@@ -1,13 +1,20 @@
 /** Telegram 机器人Token */
-const token = '机器人Token'
+const token = '5073237170:AAFTDd2dwsXT09KkHfKT3tcrP8FO6d_P-eQ'
 const robotName = '@寻龙'
 
-const TelegramBot = require('node-telegram-bot-api')
-const cheerio = require('cheerio')
-const axios = require('axios')
-const moment = require('moment')
+// const TelegramBot = require('node-telegram-bot-api')
+// const cheerio = require('cheerio')
+// const axios = require('axios')
+// const moment = require('moment')
+// const vm = require('vm')
+// const fetch = require('node-fetch')
+import fetch from 'node-fetch'
+import TelegramBot from 'node-telegram-bot-api'
+import cheerio from 'cheerio'
+import axios from 'axios'
+import moment from 'moment'
+import vm from 'vm'
 moment.locale('zh-cn')
-const vm = require('vm')
 
 ///////////////// 链接 ///////////////////////////////
 const javUrl = 'https://www.javbus.com'
@@ -25,6 +32,7 @@ const helpMsg = `
     /xm hot 查询 \n
   由 Cloudflare Worker 强力驱动
 `
+
 const state = { start: Date.now(), date: {} }
 
 const idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
@@ -43,11 +51,13 @@ const httpGet = config => {
       }
     })
 
-    instance(config).then(res => {
-      resolve(res);
-    }).catch(err => {
-      reject(err);
-    })
+    instance(config)
+      .then(res => {
+        resolve(res)
+      })
+      .catch(err => {
+        reject(err)
+      })
   })
 }
 
@@ -230,7 +240,7 @@ bot.onText(/\/xm (.+)/, async (msg, match) => {
 
 async function parseHtml(id) {
   const result = { title: '', cover: '', magnet: [], list: [] }
-  let response = await httpGet({baseURL:javUrl,url:'/' + id})
+  let response = await httpGet({ baseURL: javUrl, url: '/' + id })
   let $ = cheerio.load(response.data)
   let $image = $('a.bigImage img')
   result.cover = javUrl + $image.attr('src')
@@ -241,7 +251,11 @@ async function parseHtml(id) {
   new vm.Script($script.html()).runInContext(context)
   let floor = Math.floor(Math.random() * 1e3 + 1)
   let url = `/ajax/uncledatoolsbyajax.php?gid=${ajax.gid}&uc=${ajax.uc}&img=${ajax.img}&lang=zh&floor=${floor}`
-  response = await httpGet({baseURL:javUrl,url,headers: { referer: javUrl + id }})
+  response = await httpGet({
+    baseURL: javUrl,
+    url,
+    headers: { referer: javUrl + id }
+  })
   $ = cheerio.load(response.data, {
     xmlMode: true,
     decodeEntities: true,
@@ -265,7 +279,7 @@ async function parseHtml(id) {
     }
   }
 
-  response = await httpGet({baseURL:embedyUrl,url:'/video/' + id})
+  response = await httpGet({ baseURL: embedyUrl, url: '/video/' + id })
   $ = cheerio.load(response.data, {
     xmlMode: true,
     decodeEntities: true,
@@ -298,38 +312,50 @@ async function parseHtml(id) {
 
 async function parseXtml(id) {
   const result = { title: '', cover: '', magnet: [], list: [] }
-  let response = await httpGet({baseURL:xvideoUrl,url:'/?k=' + encodeURI(id)})
-  let $ = cheerio.load(response.data, {
+  const a = await fetch(
+    'https://cn.pornhub.com/video/search?search=%E9%BA%BB%E8%B1%86'
+  )
+  const b = await a.text()
+  // console.log(b)
+  let response = await httpGet({
+    baseURL: xvideoUrl,
+    url: '/?k=' + encodeURI(id)
+  })
+  let $ = cheerio.load(b, {
     xmlMode: true,
     decodeEntities: true,
     normalizeWhitespace: true
   })
-  let $div1 = $('div.thumb-inside')
-  let $div = $('div.thumb-under')
-  if ($div.length > 0) {
+  let $div1 = $('div.wrap')
+  if ($div1.length > 0) {
     let list = []
-    for (let i = 0; i < $div.length; i++) {
-      let $d3 = $div1.eq(i).find('span.video-hd-mark')
+    for (let i = 0; i < $div1.length; i++) {
+      let $a3 = $div1.eq(i).find('a.videoPreviewBg.videoPreviewBg')
+      let $d3 = $div1.eq(i).find('var.duration')
       let $i3 = $div1.eq(i).find('img')
-      let $a3 = $div.eq(i).find('a')
+      let $title = $div1.eq(i).find('span.title a')
+      let $views = $div1.eq(i).find('span.views var')
+      let $good = $div1.eq(i).find('div.rating-container .value')
       if ($a3.length === 0) continue
       list.push({
-        title: decodeURI($a3.attr('title').trim()),
+        title: $title.html(),
+        views: $views.html(),
+        good: $good.html(),
         duration: decodeURI($d3.html()),
-        cover: decodeURI($i3.attr('data-src').trim()),
-        link: xvideoUrl + decodeURI($a3.attr('href').trim())
+        cover: decodeURI($i3.attr('src').trim()),
+        link: 'https://cn.pornhub.com' + decodeURI($a3.attr('href').trim())
       })
     }
     result.list = list.splice(0, 5)
   }
 
-  console.log('最终结果', result)
+  // console.log('最终结果', result)
   return result
 }
 
 async function parseBtml(type) {
   const result = { title: '', cover: '', magnet: [], list: [] }
-  let response = await httpGet({baseURL:xhamsterUrl,url:'/' + type})
+  let response = await httpGet({ baseURL: xhamsterUrl, url: '/' + type })
   let $ = cheerio.load(response.data, {
     xmlMode: true,
     decodeEntities: true,
