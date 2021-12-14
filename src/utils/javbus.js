@@ -22,20 +22,20 @@ export async function reqJavbus(id) {
     ajax_req.headers["Referer"] = javUrl
     let response = await fetch(url, ajax_req)
     let responseText = await response.text()
+
     let $ = cheerio.load(responseText)
     let $image = $('a.bigImage img')
     result.cover = javUrl + $image.attr('src')
     result.title = $image.attr('title')
-    let ajax = { gid: '', uc: '', img: '' }
-    const context = new vm.createContext(ajax)
-    let $script = $('body > script:nth-child(9)')
-    new vm.Script($script.html()).runInContext(context)
-    let floor = Math.floor(Math.random() * 1e3 + 1)
 
-    url = javUrl + `/ajax/uncledatoolsbyajax.php?gid=${ajax.gid}&uc=${ajax.uc}&img=${ajax.img}&lang=zh&floor=${floor}`
+    let gid = responseText.match(new RegExp(/gid.=.(\d*)/))[1]
+    let img = responseText.match(new RegExp(/img.=.\'(.*)\'/))[1]
+    let floor = Math.floor(Math.random() * 1e3 + 1)
+    url = javUrl + `/ajax/uncledatoolsbyajax.php?gid=${gid}&img=${img}&lang=zh&floor=${floor}`
     ajax_req.headers["Referer"] = javUrl + id
     response = await fetch(url, ajax_req)
     responseText = await response.text()
+
     $ = cheerio.load(responseText, {
       xmlMode: true,
       decodeEntities: true,
@@ -64,6 +64,7 @@ export async function reqJavbus(id) {
     ajax_req.headers["Referer"] = embedyUrl
     response = await fetch(url, ajax_req)
     responseText = await response.text()
+
     $ = cheerio.load(responseText, {
       xmlMode: true,
       decodeEntities: true,
