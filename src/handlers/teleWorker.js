@@ -30,7 +30,7 @@ export default async request => {
       欢迎使用寻龙机器人 \n
       请输入命令格式: \n
         /av ssni-888 查询 \n
-        /xv 麻豆 查询 \n
+        /xv 麻豆 关键字查询P站 \n
         /xm 4k 查询 \n
       由 Cloudflare Worker 强力驱动
     `
@@ -135,10 +135,47 @@ export default async request => {
         if (isPrivate)
           bot.sendText(MESSAGE.chat_id, `开始查找关键字：${code} ……`)
 
-        let { list } = await reqPornhub(code)
+        let { list } = await reqPornhub(code, false)
 
         if (list.length) {
           let message = '关键字查询：[' + code + ']\n'
+          list.every((list, i) => {
+            message +=
+              '\n----------------------\n点击观看: <a href="' +
+              list.link +
+              '">' +
+              list.title +
+              '</a>'
+            message += '\n时长: ' + list.duration
+            message += '\n好评率: ' + list.good
+            message += '\n观看人数: ' + list.views
+            return i + 1 < max
+          })
+          bot.sendText(MESSAGE.chat_id, message)
+        } else {
+          bot.sendText(MESSAGE.chat_id, '还没有相关链接')
+        }
+      } catch (e) {
+        bot.sendText(MESSAGE.chat_id, e.message)
+      }
+      return RETURN_OK
+    } else if (MESSAGE.text.startsWith('/show')) {
+      const today = moment().format('YYYY-MM-DD')
+      if (state.date[today]) state.date[today]++
+      else state.date[today] = 1
+
+      let code = MESSAGE.text.replace('/show', '').trim()
+
+      let isPrivate = MESSAGE.chat_type === 'private'
+      let max = isPrivate ? 10 : 3
+
+      try {
+        if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始推荐热门 ……`)
+
+        let { list } = await reqPornhub(code, true)
+
+        if (list.length) {
+          let message = '推荐热门查询：[' + code + ']\n'
           list.every((list, i) => {
             message +=
               '\n----------------------\n点击观看: <a href="' +

@@ -12,12 +12,21 @@ let ajax_req = {
   method: 'GET'
 }
 
-export async function reqPornhub(id) {
+export async function reqPornhub(id, bool) {
   const result = {
     list: []
   }
 
-  let url = pornhubUrl + '/video/search?search=' + encodeURI(id)
+  let url = ''
+  if (bool) {
+    if (id) {
+      url = pornhubUrl + '/video?o=' + id
+    } else {
+      url = pornhubUrl + '/video'
+    }
+  } else {
+    url = pornhubUrl + '/video/search?search=' + encodeURI(id)
+  }
   let response = await fetch(url, ajax_req)
   let responseText = await response.text()
 
