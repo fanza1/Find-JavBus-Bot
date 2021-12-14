@@ -1,5 +1,5 @@
 import Telegram from '../utils/telegram.js'
-import { BOT_TOKEN,ROBOT_NAME } from '../config/index.js'
+import { BOT_TOKEN, ROBOT_NAME } from '../config/index.js'
 import { reqJavbus } from '../utils/javbus.js'
 import moment from 'moment'
 moment.locale('zh-cn')
