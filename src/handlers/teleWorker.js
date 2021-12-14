@@ -85,7 +85,7 @@ export default async request => {
           await bot.sendPhoto(MESSAGE.chat_id, media)
         }
         if(magnet.length || list.length) {
-          let messageText = ''
+          let message = ''
           if (magnet.length) {
             magnet.every((item, i) => {
               message += '\n----------------------\n日期: ' + item.dateTime
@@ -110,9 +110,9 @@ export default async request => {
             })
           }
           if (!isPrivate && magnet.length > max) {
-            messageText += `\n-----------\n在群聊中发车，还有 ${magnet.length - max} 个Magnet链接没有显示\n与 ${ROBOT_NAME} 机器人单聊可以显示所有链接`;
+            message += `\n-----------\n在群聊中发车，还有 ${magnet.length - max} 个Magnet链接没有显示\n与 ${ROBOT_NAME} 机器人单聊可以显示所有链接`;
           }
-          bot.sendText(MESSAGE.chat_id, messageText)
+          bot.sendText(MESSAGE.chat_id, message)
         }
         else {
           bot.sendText(MESSAGE.chat_id, "还没有相关链接")
