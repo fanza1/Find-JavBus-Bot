@@ -77,11 +77,12 @@ export default async request => {
 
         let { title, cover, magnet, list } = await reqJavbus(code)
 
-        if (title) {
-          await bot.sendText(MESSAGE.chat_id, `<b><i>${title}</i></b>`)
-        }
-        if (cover) {
-          await bot.sendPhoto(MESSAGE.chat_id, cover + '?random=64')
+        if (cover && title) {
+          const media = {
+            url: cover,
+            caption: title
+          }
+          await bot.sendPhoto(MESSAGE.chat_id, media)
         }
         if(magnet.length || list.length) {
           let messageText = ''
@@ -114,15 +115,15 @@ export default async request => {
           bot.sendText(MESSAGE.chat_id, messageText)
         }
         else {
-          bot.sendText(MESSAGE.chat_id, "还没有Magnet链接")
+          bot.sendText(MESSAGE.chat_id, "还没有相关链接")
         }
       } catch (e) {
-        bot.sendText(ERRLOG_CHANNEL,e.message)
+        bot.sendText(MESSAGE.chat_id, e.message)
       }
       return RETURN_OK
-
-    } else {
-      bot.sendText(MESSAGE.chat_id,help_text)
+    }
+    else {
+      bot.sendText(MESSAGE.chat_id, help_text)
       return RETURN_OK
     }
 

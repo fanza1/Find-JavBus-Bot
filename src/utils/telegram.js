@@ -31,7 +31,7 @@ class Telegram {
     fetch(new Request(this.telegramUrl, opts))
   }
 
-  sendPhoto (chat_id,photo) {
+  sendPhoto (chat_id, photo) {
     let payload = {
       "method": "sendPhoto",
       "chat_id": chat_id,
