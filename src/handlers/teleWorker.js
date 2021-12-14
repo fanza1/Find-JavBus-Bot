@@ -29,7 +29,7 @@ export default async request => {
       请输入命令格式: \n
         /av ssni-888 查询 \n
         /xv 麻豆 查询 \n
-        /xm hot 查询 \n
+        /xm 4k 查询 \n
       由 Cloudflare Worker 强力驱动
     `
 
@@ -141,14 +141,8 @@ export default async request => {
         if (list.length) {
           let message = '关键字查询：[' + code + ']\n'
           list.every((list, i) => {
-            message +=
-              '\n----------------------\n点击观看: <a href="' +
-              list.link +
-              '">' +
-              list.title +
-              '</a>'
+            message += '\n----------------------\n点击观看: <a href="' + list.link + '">' + list.title + '</a>'
             message += '\n时长: ' + list.duration
-            if (list.view) message += '\n观看人数: ' + list.view
             return i + 1 < max
           })
           bot.sendText(MESSAGE.chat_id, message)
@@ -179,12 +173,7 @@ export default async request => {
         if (list.length) {
           let message = '推荐资源：[' + code + ']\n'
           list.every((list, i) => {
-            message +=
-            '\n----------------------\n点击观看: <a href="' +
-            list.link +
-            '">' +
-            list.title +
-            '</a>'
+            message += '\n----------------------\n点击观看: <a href="' + list.link + '">' + list.title + '</a>'
             message += '\n时长：' + list.duration
             return i + 1 < max
           })

@@ -24,8 +24,8 @@ export async function reqXVideo(id) {
       normalizeWhitespace: true
     })
 
-    let $div1 = $('div.thumb-inside')
     let $div = $('div.thumb-under')
+    let $div1 = $('div.thumb-inside')
     if ($div.length > 0) {
       let list = []
       for (let i = 0; i < $div.length; i++) {
