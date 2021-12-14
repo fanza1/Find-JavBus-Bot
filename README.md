@@ -1,5 +1,5 @@
 # Find-JavBus-Bot
-Telegram番号搜索磁链机器人
+Telegram搜索磁链机器人
 
 ## 感谢
 [感谢大佬项目](https://nodejs.org/zh-cn/download/)
