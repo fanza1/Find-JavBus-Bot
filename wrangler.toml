@@ -1,0 +1,4 @@
+workers_dev = true
+name = "javbus"
+type = "webpack"
+account_id = "5598ed56758d7b038c57895f1ff7ecf5"
