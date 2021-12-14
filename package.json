@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "axios": "^0.18.0",
+    "axios-cloudflare": "^1.0.2",
     "cheerio": "^1.0.0-rc.2",
     "echarts": "^4.0.4",
     "fs": "^0.0.1-security",

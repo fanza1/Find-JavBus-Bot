@@ -1,3 +1,4 @@
+const axiosCloudflare = require('axios-cloudflare');
 import axios from 'axios'
 import cheerio from 'cheerio'
 import vm from 'vm'
@@ -7,6 +8,7 @@ const embedyUrl = 'https://embedy.cc'
 const xvideoUrl = 'https://www.xvideos.com'
 const xhamsterUrl = 'https://xhamster.com'
 
+axiosCloudflare(axios)
 const httpGet = config => {
     return new Promise((resolve, reject) => {
         const instance = axios.create({
