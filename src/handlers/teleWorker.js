@@ -1,4 +1,4 @@
-/** Telegram机器人Token */
+/** Telegram 机器人Token */
 const token = '5073237170:AAFTDd2dwsXT09KkHfKT3tcrP8FO6d_P-eQ'
 const robotName = '@寻龙'
 
