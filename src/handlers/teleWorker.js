@@ -1,10 +1,7 @@
 import Telegram from '../utils/telegram'
 import { BOT_TOKEN,ERRLOG_CHANNEL,ROBOT_NAME } from '../config'
 import { reqJavbus } from '../utils/javbus'
-import cheerio from 'cheerio'
-import axios from 'axios'
 import moment from 'moment'
-import vm from 'vm'
 moment.locale('zh-cn')
 
 
@@ -33,27 +30,7 @@ export default async request => {
 
     const codeRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/;
 
-    const httpGet = config => {
-      return new Promise((resolve, reject) => {
-        const instance = axios.create({
-          method: 'get',
-          timeout: 5000,
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.117 Safari/537.36',
-            Accept:
-              'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'zh-CN,zh;q=0.9'
-          }
-        })
 
-        instance(config).then(res => {
-          resolve(res);
-        }).catch(err => {
-          reject(err);
-        })
-      })
-    }
 
     if (body.message.sticker) {
       bot.sendText(MESSAGE.chat_id,help_text)
@@ -80,6 +57,10 @@ export default async request => {
       return RETURN_OK
     }
     else if (MESSAGE.text.startsWith('/av')) {
+      const today = moment().format('YYYY-MM-DD')
+      if (state.date[today]) state.date[today]++
+      else state.date[today] = 1
+
       let code = MESSAGE.text.replace('/av','').trim()
       if (codeRegex.test(code)) {
         code = code.match(codeRegex);
@@ -90,34 +71,30 @@ export default async request => {
       let max = isPrivate ? 10 : 3;
 
       try {
-        let {title,img,resultList} = await reqJavbus(code)
+        if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始查找车牌：${code} ……`)
+        let {title, cover, magnet, list} = await reqJavbus(code)
 
-        let media = {
-          caption: title,
-          url: img
+        if (title) {
+          await bot.sendText(MESSAGE.chat_id, `<b><i>${title}</i></b>`)
         }
-        bot.sendPhoto(MESSAGE.chat_id,media)
+        if (result.cover) {
+          await bot.sendPhoto(MESSAGE.chat_id, cover + '?random=64')
+        }
 
         let messageText = ''
 
-        if (resultList.length > 0) {
-          for (let i = 0; i < resultList.length; i++) {
-            messageText += '\n-----------\n名字: ' + decodeURIComponent(resultList[i].name)
-            if (resultList[i].is_hd) {
-              messageText += " [高清]"
-            }
-            if (resultList[i].has_subtitle) {
-              messageText += " [字幕]"
-            }
-            messageText += " " + resultList[i].releaseDate
-            messageText += '\n链接: <code>' + resultList[i].magnet + '</code>'
-            if ((i + 1) > max) {
-              break;
-            };
-          }
+        if (magnet.length > 0) {
+          magnet.every((item, i) => {
+            message += '\n----------------------\n日期: ' + item.dateTime
+            message += '\n大小: ' + item.size
+            if (item.is_hd) message += '\n分辨率: ' + item.is_hd
+            if (item.has_subtitle) message += '\n字幕: 有' + item.has_subtitle
+            message += '\n磁力链接: ' + '\n' + '<code>' + item.link + '</code>'
+            return i + 1 < max
+          })
 
-          if (!isPrivate && resultList.length > max) {
-            messageText += `\n-----------\n在群聊中发车，还有 ${resultList.length - max} 个Magnet链接没有显示\n与 ${ROBOT_NAME} 机器人单聊可以显示所有链接`;
+          if (!isPrivate && magnet.length > max) {
+            messageText += `\n-----------\n在群聊中发车，还有 ${magnet.length - max} 个Magnet链接没有显示\n与 ${ROBOT_NAME} 机器人单聊可以显示所有链接`;
           }
 
           bot.sendText(MESSAGE.chat_id, messageText)
