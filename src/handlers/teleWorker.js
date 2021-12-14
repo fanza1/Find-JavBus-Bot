@@ -77,32 +77,42 @@ export default async request => {
         if (title) {
           await bot.sendText(MESSAGE.chat_id, `<b><i>${title}</i></b>`)
         }
-        if (result.cover) {
+        if (cover) {
           await bot.sendPhoto(MESSAGE.chat_id, cover + '?random=64')
         }
-
-        let messageText = ''
-
-        if (magnet.length > 0) {
-          magnet.every((item, i) => {
-            message += '\n----------------------\n日期: ' + item.dateTime
-            message += '\n大小: ' + item.size
-            if (item.is_hd) message += '\n分辨率: ' + item.is_hd
-            if (item.has_subtitle) message += '\n字幕: 有' + item.has_subtitle
-            message += '\n磁力链接: ' + '\n' + '<code>' + item.link + '</code>'
-            return i + 1 < max
-          })
-
+        if(magnet.length || list.length) {
+          let messageText = ''
+          if (magnet.length) {
+            magnet.every((item, i) => {
+              message += '\n----------------------\n日期: ' + item.dateTime
+              message += '\n大小: ' + item.size
+              if (item.is_hd) message += '\n分辨率: ' + item.is_hd
+              if (item.has_subtitle) message += '\n字幕: 有' + item.has_subtitle
+              message += '\n磁力链接: ' + '\n' + '<code>' + item.link + '</code>'
+              return i + 1 < max
+            })
+          }
+          if (list.length) {
+            list.every((list, i) => {
+              message +=
+                '\n----------------------\n点击观看: <a href="' +
+                list.link +
+                '">' +
+                list.title +
+                '</a>'
+              message += '\n时长: ' + list.duration
+              if (list.view) message += '\n观看人数: ' + list.view
+              return i + 1 < max
+            })
+          }
           if (!isPrivate && magnet.length > max) {
             messageText += `\n-----------\n在群聊中发车，还有 ${magnet.length - max} 个Magnet链接没有显示\n与 ${ROBOT_NAME} 机器人单聊可以显示所有链接`;
           }
-
           bot.sendText(MESSAGE.chat_id, messageText)
-        } else {
+        }
+        else {
           bot.sendText(MESSAGE.chat_id, "还没有Magnet链接")
         }
-
-
       } catch (e) {
         bot.sendText(ERRLOG_CHANNEL,e.message)
       }
