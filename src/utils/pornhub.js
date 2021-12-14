@@ -27,6 +27,7 @@ export async function reqPornhub(id, bool) {
   } else {
     url = pornhubUrl + '/video/search?search=' + encodeURI(id)
   }
+
   let response = await fetch(url, ajax_req)
   let responseText = await response.text()
 
@@ -56,7 +57,7 @@ export async function reqPornhub(id, bool) {
         link: pornhubUrl + decodeURI($a3.attr('href').trim())
       })
     }
-    result.list = list.splice(0, 5)
+    result.list = list.splice(0, 8)
   }
 
   return result

@@ -27,11 +27,12 @@ export default async request => {
     const bot = new Telegram(BOT_TOKEN, MESSAGE)
 
     const help_text = `
-      欢迎使用寻龙机器人 \n
-      请输入命令格式: \n
+      欢迎使用寻龙机器人,请输入命令格式: \n
+        /start 欢迎语 \n
         /av ssni-888 查询 \n
+        /show ht/mv/lg/tr/cm 关键字查询P站 \n
         /xv 麻豆 关键字查询P站 \n
-        /xm 4k 查询 \n
+        /xm 4k 关键字查询XHAMSTER站 \n
       由 Cloudflare Worker 强力驱动
     `
 
