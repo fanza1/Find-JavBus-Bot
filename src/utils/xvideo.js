@@ -14,7 +14,6 @@ export async function reqXVideo(id) {
     const result = { list: [] }
 
     let url = xvideoUrl + '/?k=' + encodeURI(id)
-    ajax_req.headers["Referer"] = xvideoUrl
     let response = await fetch(url, ajax_req)
     let responseText = await response.text()
 
