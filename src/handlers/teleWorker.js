@@ -4,6 +4,7 @@ import cheerio from 'cheerio'
 import axios from 'axios'
 import moment from 'moment'
 import vm from 'vm'
+import fs from 'fs'
 
 export default async request => {
   const token = BOT_TOKEN
