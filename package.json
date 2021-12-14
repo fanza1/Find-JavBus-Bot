@@ -1,10 +1,8 @@
 {
-  "name": "telegram-bot",
+  "name": "javbus-bot",
   "version": "1.0.0",
   "description": "Telegram 番号机器人",
   "main": "index.js",
-  "author": "ssh@ik.me",
-  "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0",
     "cheerio": "^1.0.0-rc.2",
