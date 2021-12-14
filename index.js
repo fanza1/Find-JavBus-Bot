@@ -1,5 +1,5 @@
-import teleWorker from './src/handlers/teleWorker'
-import Router from './router'
+import teleWorker from './src/handlers/teleWorker.js'
+import Router from './router.js'
 
 addEventListener('fetch', event => {
   return event.respondWith(handleRequest(event.request))

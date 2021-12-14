@@ -27,7 +27,7 @@ class Telegram {
       },
       body: JSON.stringify(payload)
     };
-    
+
     fetch(new Request(this.telegramUrl, opts))
   }
 
@@ -57,4 +57,4 @@ class Telegram {
 
 }
 
-module.exports = Telegram
+export default Telegram
