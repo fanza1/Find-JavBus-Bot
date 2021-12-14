@@ -121,6 +121,44 @@ export default async request => {
       }
       return RETURN_OK
     }
+    else if (MESSAGE.text.startsWith('/xv')) {
+      const today = moment().format('YYYY-MM-DD')
+      if (state.date[today]) state.date[today]++
+      else state.date[today] = 1
+
+      let code = MESSAGE.text.replace('/xv','').trim()
+
+      let isPrivate = MESSAGE.chat_type === 'private';
+      let max = isPrivate ? 10 : 3;
+
+      try {
+        if (isPrivate) bot.sendText(MESSAGE.chat_id, `开始查找关键字：${code} ……`)
+
+        let { list } = await reqXVideo(code)
+
+        if (list.length) {
+          let message = '[' + code + ']\n'
+          list.every((list, i) => {
+            message +=
+              '\n----------------------\n点击观看: <a href="' +
+              list.link +
+              '">' +
+              list.title +
+              '</a>'
+            message += '\n时长: ' + list.duration
+            if (list.view) message += '\n观看人数: ' + list.view
+            return i + 1 < max
+          })
+          bot.sendText(MESSAGE.chat_id, message)
+        }
+        else {
+          bot.sendText(MESSAGE.chat_id, "还没有相关链接")
+        }
+      } catch (e) {
+        bot.sendText(MESSAGE.chat_id, e.message)
+      }
+      return RETURN_OK
+    }
     else {
       bot.sendText(MESSAGE.chat_id, help_text)
       return RETURN_OK
