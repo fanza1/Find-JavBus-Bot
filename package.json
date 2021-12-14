@@ -12,7 +12,6 @@
     "koa": "^2.5.0",
     "lodash": "^4.17.5",
     "moment": "^2.22.1",
-    "node-telegram-bot-api": "^0.30.0",
-    "pm2": "^2.10.2"
+    "node-telegram-bot-api": "^0.30.0"
   }
 }
