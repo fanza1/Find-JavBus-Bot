@@ -1,4 +1,4 @@
-/** Telegram机器人Token */
+/** Telegram 机器人Token */
 const token = '机器人Token'
 const robotName = '@寻龙'
 
@@ -8,10 +8,26 @@ const axios = require('axios')
 const moment = require('moment')
 moment.locale('zh-cn')
 const vm = require('vm')
+
+///////////////// 链接 ///////////////////////////////
 const javUrl = 'https://www.javbus.com'
 const embedyUrl = 'https://embedy.cc'
 const xvideoUrl = 'https://www.xvideos.com'
 const xhamsterUrl = 'https://xhamster.com'
+
+const bot = new TelegramBot(token, { polling: true })
+
+const helpMsg = `
+  欢迎使用寻龙机器人 \n
+  请输入命令格式: \n
+    /av ssni-888 查询 \n
+    /xv 麻豆 查询 \n
+    /xm hot 查询 \n
+  由 Cloudflare Worker 强力驱动
+`
+const state = { start: Date.now(), date: {} }
+
+const idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
 
 const httpGet = config => {
   return new Promise((resolve, reject) => {
@@ -35,22 +51,11 @@ const httpGet = config => {
   })
 }
 
-const bot = new TelegramBot(token, { polling: true })
-
-const helpMsg = `
-  欢迎使用寻龙机器人 \n
-  请输入命令格式: \n
-    /av ssni-888 查询 \n
-    /xv 麻豆 查询 \n
-    /xm hot 查询 \n
-  由 Cloudflare Worker 强力驱动
-`
+///////////////// 指令 ///////////////////////////////
 
 bot.onText(/\/start/, msg => {
   bot.sendMessage(msg.chat.id, helpMsg)
 })
-
-const state = { start: Date.now(), date: {} }
 
 bot.onText(/\/state/, msg => {
   //最近5天工作状态
@@ -65,12 +70,6 @@ bot.onText(/\/state (\d+)/, (msg, match) => {
 
   return bot.sendMessage(msg.chat.id, buffer)
 })
-
-
-
-let idRegex = /^([a-z]+)(?:-|_|\s)?([0-9]+)$/
-
-///////////////// 指令 ///////////////////////////////
 
 bot.onText(/\/av (.+)/, async (msg, match) => {
   const today = moment().format('YYYY-MM-DD')
