@@ -30,6 +30,7 @@ export default async request => {
       欢迎使用寻龙机器人,请输入命令格式: \n
         /start 欢迎语 \n
         /av ssni-888 查询 \n
+        /state 5 查询历史 \n
         /show ht/mv/lg/tr/cm 关键字查询P站 \n
         /xv 麻豆 关键字查询P站 \n
         /xm 4k 关键字查询XHAMSTER站 \n
